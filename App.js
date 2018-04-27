@@ -7,9 +7,9 @@
 import React, { Component } from 'react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-import { ActionCreators } from './app/actions';
-import RoomWS from './app/lib/websocket';
-import * as Payloads from './app/payloads';
+import { ActionCreators } from './src/actions';
+import RoomWS from './src/lib/websocket';
+import * as Payloads from './src/payloads';
 import {
 	Platform,
 	StyleSheet,
@@ -23,16 +23,30 @@ import {
 	ActivityIndicator,
 	Modal
 } from 'react-native';
-import ChatList from './app/components/ChatList'
-import Message from './app/components/Message';
-import Flag from './app/components/Flag';
-import BottomBar from './app/containers/BottomBar';
-import ModalPickUser from './app/components/ModalPickUser';
-import styles from './app/styles';
+import { ChatList, Message, Flag, ModalPickUser } from './src/components';
+import BottomBar from './src/containers/BottomBar';
+import styles from './src/styles';
+import Zeroconf from 'react-native-zeroconf';
 
 class App extends Component {
 
+	zeroconf = null;
 	room = null;
+
+	constructor() {
+		super();
+		this.zeroconf = new Zeroconf();
+		this.zeroconf.on('start', () => console.log('The scan has started'));
+		this.zeroconf.on('stop', () => console.log('The scan has stoped'));
+		this.zeroconf.on('found', (name) => console.log('The scan has found something:', name));
+		this.zeroconf.on('resolved', (a,b) => {
+			console.log('The scan has resolved', a, b);
+			console.log('services', this.zeroconf.getServices());
+		});
+		this.zeroconf.on('error', (e) => console.log('The scan errored:', e));
+		this.zeroconf.on('update', () => console.log('The scan has updated'));
+		this.zeroconf.on('remove', (a,b) => console.log('The scan has removed', a, b));
+	}
 
 	state = {
 		modalVisible: false,
@@ -129,7 +143,12 @@ class App extends Component {
 						break;
 					case 'connect':
 						this.props.server_setHost(`ws://${inputValue[1]}:63111`);
-						this.joinRoom()
+						this.joinRoom();
+						break;
+					case 'scan':
+						console.log(NativeModules.ServerHandler.PROTOCOL);
+						this.zeroconf.scan(NativeModules.ServerHandler.PROTOCOL);
+						break;
 					default:
 						Payloads.Flag(`Unknown command: '${inputValue[0]}'`);
 				}
@@ -247,10 +266,21 @@ class App extends Component {
 	}
 }
 
+/**
+ * Map Redux Actions to this.props
+ * 
+ * @param {Function} dispatch 
+ */
 function mapDispatchToProps(dispatch) {
 	return bindActionCreators(ActionCreators, dispatch);
 }
 
+/**
+ * Map returned properties to this.props
+ * This triggers a render() when values change
+ * 
+ * @param {Object} state 
+ */
 function mapStateToProps(state) {
 	return {
 		server: state.server,

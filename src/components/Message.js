@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { View, Text, TouchableHighlight, TouchableNativeFeedback, Platform } from 'react-native';
 import styles from '../styles';
 
-export default class Message extends Component {
+export class Message extends Component {
 
 	_onPress() {
 		this.props.onPressItem(this);

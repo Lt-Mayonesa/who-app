@@ -3,9 +3,9 @@ import { AppRegistry } from 'react-native';
 import App from './App';
 import { Provider } from 'react-redux';
 import { createStore, applyMiddleware, compose } from 'redux';
-import reducers from './app/reducers';
+import reducers from './src/reducers';
 import { createLogger } from 'redux-logger';
-import * as types from './app/actions/types';
+import * as types from './src/actions/types';
 
 const loggerMiddleware = createLogger({ predicate: (getState, action) => __DEV__ });
 

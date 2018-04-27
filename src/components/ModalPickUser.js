@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { View, Text, Button, FlatList, TouchableHighlight, TouchableNativeFeedback, Platform } from 'react-native';
 import styles from '../styles';
 
-export default class ModalPickUser extends Component {
+export class ModalPickUser extends Component {
 
     _onItemSelected(item) {
         this.props.onItemSelected(this.props.ip, item.value);

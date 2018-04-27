@@ -2,7 +2,6 @@ package com.who.server;
 
 import android.os.AsyncTask;
 import android.os.CountDownTimer;
-import android.util.Log;
 
 import com.google.gson.Gson;
 
@@ -10,13 +9,11 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import com.who.server.payloads.Guess;
 import com.who.server.sockets.RoomWS;
 import com.who.server.sockets.models.Packet;
 
-import fi.iki.elonen.NanoHTTPD;
 import fi.iki.elonen.NanoWSD;
 
 /**
@@ -26,23 +23,11 @@ import fi.iki.elonen.NanoWSD;
 public class RoomServer extends NanoWSD {
     private final String TAG = this.getClass().getCanonicalName();
 
-    private String name;
     private CountDownTimer timer;
     private ArrayList<RoomWS> sockets = new ArrayList<>();
 
-    public RoomServer(String name, int port) {
+    public RoomServer(int port) {
         super(port);
-        this.name = name;
-    }
-
-    @Override
-    public Response serve(IHTTPSession session) {
-        if (session.getUri().contains("/probe"))
-            return newFixedLengthResponse(
-                    Response.Status.OK,
-                    "application/json",
-                    "{\"package\": \"com.who\",\"status\": \"ok\",\"name\": \"" + name + "\"}");
-        return super.serve(session);
     }
 
     @Override

@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Text } from 'react-native';
 import styles from '../styles';
 
-export default class Flag extends Component {
+export class Flag extends Component {
     render() {
         return (
             <Text

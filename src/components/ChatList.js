@@ -5,7 +5,7 @@ import styles from '../styles';
 /**
  * We extend FlatList so we can scroll on update
  */
-export default class ChatList extends FlatList {
+export class ChatList extends FlatList {
 
     /**
      * Scroll to end of list when updated
