@@ -16,15 +16,13 @@ export const messages = createReducer({}, {
         newState.push(action.payload);
         return newState;
     },
-    [types.RECEIVED_GUESS](state, action) {
-        console.log('reducer', action.payload);
-        
+    [types.RECEIVED_GUESS](state, action) {        
         let newState = [...state];
         action.payload.global = true;
         if (action.payload.correct) {
-            action.payload.value = `${action.payload.user} tried to guess and won`;
+            action.payload.value = `${action.payload.name} got kicked out by ${action.payload.user}`;
         } else {
-            action.payload.value = `${action.payload.user} tried to guess and failed`;
+            action.payload.value = `${action.payload.user} tried to guess for ${action.payload.name} and failed`;
         }
         delete action.payload.user;
         newState.push(action.payload);

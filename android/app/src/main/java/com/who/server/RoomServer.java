@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import com.who.server.payloads.Guess;
+import com.who.server.payloads.WithPlayers;
 import com.who.server.sockets.RoomWS;
 import com.who.server.sockets.models.Packet;
 
@@ -123,23 +124,26 @@ public class RoomServer extends NanoWSD {
         }
     }
 
-    public boolean guessedCorreclty(Guess guess) {
-        boolean correct = false;
+    public int guessedCorrectly(Guess guess) {
         for (RoomWS socket : this.sockets) {
             if (socket.getUser().getIp().equals(guess.getIp()) &&
                     socket.getUser().getName().equals(guess.getName())) {
-                correct = true;
-                break;
+                if (socket.getUser().isActive()) {
+                    socket.getUser().setActive(false);
+                    return 1;
+                } else {
+                    return 2;
+                }
             }
         }
-        return correct;
+        return 0;
     }
 
-    public ArrayList<String> getPlayers() {
-        ArrayList<String> l = new ArrayList<>();
+    public ArrayList<WithPlayers.Player> getPlayers() {
+        ArrayList<WithPlayers.Player> l = new ArrayList<>();
         for (RoomWS socket : this.sockets) {
             if (socket.isOpen())
-                l.add(socket.getUser().getName());
+                l.add(new WithPlayers.Player(socket.getUser().getName(), socket.getUser().isActive()));
         }
         return l;
     }

@@ -9,8 +9,9 @@ export class Flag extends Component {
                 style={[
                     (this.props.global ? styles['flag.global'] : styles['flag.local']),
                     styles.flag
-                ]}
-            >{this.props.global ? '(g)' : ''} {this.props.text}</Text>
+                ]}>
+                {this.props.global ? '(g)' : ''} {this.props.text}
+            </Text>
         );
     }
 }

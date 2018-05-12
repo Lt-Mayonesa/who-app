@@ -6,11 +6,10 @@ import java.util.ArrayList;
  * Created by Joaquin Campero
  * on 4/19/18.
  */
-public class Name extends Base {
+public class Name extends WithPlayers {
 
     private final String type = Types.FLAG;
     private String value;
-    private ArrayList<String> players;
 
     public Name() {
 
@@ -24,11 +23,4 @@ public class Name extends Base {
         this.value = value;
     }
 
-    public ArrayList<String> getPlayers() {
-        return players;
-    }
-
-    public void setPlayers(ArrayList<String> players) {
-        this.players = players;
-    }
 }

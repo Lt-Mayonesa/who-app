@@ -10,7 +10,8 @@ class BottomBar extends Component {
 	}
 
 	_handleTextChange(inputValue) {
-		this.props.onChangeInput(inputValue);
+		if (this.props.onChangeInput)
+			this.props.onChangeInput(inputValue);
 		this.setState({
 			inputValue: inputValue
 		});

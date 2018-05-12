@@ -87,7 +87,12 @@ export default styles = StyleSheet.create({
         minWidth: 280,
         borderRadius: 2,
         elevation: 24,
-        overflow: 'hidden',
+        overflow: 'hidden'
+    },
+    modalContainerFullScreen: {
+        flex: 1,
+        backgroundColor: 'white',
+        overflow: 'hidden'
     },
     modalContainerPadding: {
         paddingTop: 24,
@@ -116,13 +121,25 @@ export default styles = StyleSheet.create({
         marginHorizontal: 24,
         marginBottom: 20
     },
+    'dialog.centered': {
+        flex: 1,
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
     'dialog.footer': {
+        alignItems: 'flex-end',
+        flexDirection: 'row',
         marginTop: 24,
         padding: 8,
         height: 52
     },
     'dialog.button': {
-        alignSelf: 'flex-end',
-        minWidth: 48
+        flex: .2,
+        minWidth: 72
+    },
+    'dialog.loader': {
+        flex: .8,
+        alignItems: 'flex-start'
     }
 });

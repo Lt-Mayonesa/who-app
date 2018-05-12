@@ -13,9 +13,22 @@ export const server = createReducer({}, {
             name: action.name
         });
     },
-    [types.JOINED_GAME](state, action) {        
+    [types.SERVER__SET_PORT](state, action) {
         return Object.assign({}, state, {
-            players: action.payload.players
+            port: action.port
         });
+    },
+    [types.SERVER__SET_WAITING](state, action) {
+        return Object.assign({}, state, {
+            waiting: action.waiting
+        })
+    },
+    [types.SERVER__UPDATE](state, action) {
+        return {
+            name: action.server.name,
+            host: action.server.host,
+            port: action.server.port,
+            waiting: true
+        };
     }
 });

@@ -20,7 +20,8 @@ function configureStore(initialState) {
 
 const store = configureStore({
     user: {},
-    messages: []
+    messages: [],
+    games: []
 });
 
 const Root = () => (

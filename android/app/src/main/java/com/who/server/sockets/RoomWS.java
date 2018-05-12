@@ -48,6 +48,7 @@ public class RoomWS extends NanoWSD.WebSocket {
 
     @Override
     protected void onMessage(NanoWSD.WebSocketFrame frame) {
+        boolean respond = true;
         frame.setUnmasked();
         Gson gson = new Gson();
         Packet packet = gson.fromJson(frame.getTextPayload(), Packet.class);
@@ -69,18 +70,25 @@ public class RoomWS extends NanoWSD.WebSocket {
         } else if (packet.isGuess()) {
             //we do something
             Guess guess = gson.fromJson(packet.getPayload(), Guess.class);
-            guess.setCorrect(this.server.guessedCorreclty(guess));
-            guess.prepare(this.mClient);
-            packet.setPayload(gson.toJsonTree(guess));
+            int guessed = this.server.guessedCorrectly(guess);
+            if (guessed < 2) {
+                guess.setCorrect(guessed == 1);
+                guess.prepare(this.server, this.mClient);
+                packet.setPayload(gson.toJsonTree(guess));
+            } else
+                respond = false;
+
         } else {
             Message m = gson.fromJson(packet.getPayload(), Message.class);
             m.prepare(this.mClient);
             packet.setPayload(gson.toJsonTree(m));
         }
-        try {
-            this.server.broadcastAll(packet);
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (respond) {
+            try {
+                this.server.broadcastAll(packet);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

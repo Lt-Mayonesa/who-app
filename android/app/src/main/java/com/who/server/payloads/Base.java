@@ -10,9 +10,9 @@ import java.util.UUID;
  * on 4/19/18.
  */
 public abstract class Base {
-    private String key;
-    private String user;
-    private String secret;
+    protected String key;
+    protected String user;
+    protected String secret;
 
     public Base() {
 

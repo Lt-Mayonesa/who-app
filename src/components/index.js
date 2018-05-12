@@ -1,4 +1,5 @@
 export * from './ChatList';
 export * from './Flag';
 export * from './Message';
-export * from './ModalPickUser';
+export * from './ModalSelect';
+export * from './GameOver';

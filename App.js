@@ -20,46 +20,30 @@ import {
 	Button,
 	NativeModules,
 	Alert,
-	ActivityIndicator,
-	Modal
+	ActivityIndicator
 } from 'react-native';
-import { ChatList, Message, Flag, ModalPickUser } from './src/components';
+import { ChatList, Message, Flag, ModalSelect, GameOver } from './src/components';
 import BottomBar from './src/containers/BottomBar';
+import GamesHub from './src/containers/GamesHub';
 import styles from './src/styles';
-import Zeroconf from 'react-native-zeroconf';
 
 class App extends Component {
 
-	zeroconf = null;
 	room = null;
 
-	constructor() {
-		super();
-		this.zeroconf = new Zeroconf();
-		this.zeroconf.on('start', () => console.log('The scan has started'));
-		this.zeroconf.on('stop', () => console.log('The scan has stoped'));
-		this.zeroconf.on('found', (name) => console.log('The scan has found something:', name));
-		this.zeroconf.on('resolved', (a,b) => {
-			console.log('The scan has resolved', a, b);
-			console.log('services', this.zeroconf.getServices());
-		});
-		this.zeroconf.on('error', (e) => console.log('The scan errored:', e));
-		this.zeroconf.on('update', () => console.log('The scan has updated'));
-		this.zeroconf.on('remove', (a,b) => console.log('The scan has removed', a, b));
-	}
-
 	state = {
-		modalVisible: false,
-		modalContent: null,
+		modalVisible: true,
+		modal: null,
 		isExpectingServerName: false,
 		isExpectingUserName: false,
 		isNameJustSet: false,
-		loading: true
+		loading: false
 	}
 
 	componentDidMount() {
-		if (!this.props.server.name)
-			this._searchServer();
+		if (!this.props.user.name)
+			this.props.newMessage(
+				Payloads.Flag('Welcome to the fun! Please enter your name :D'));
 	}
 
 	componentDidUpdate(prevProps, prevState) {
@@ -68,63 +52,34 @@ class App extends Component {
 			this.setState({
 				isNameJustSet: false
 			});
+		} else if (this.props.server.waiting) {
+			this.joinRoom();
 		}
 	}
 
 	_searchServer() {
-		this.setState({
-			loading: true
-		});
-		this.props.server_setHost(`ws://192.168.1.130:63111`);
-		setTimeout(() => {
-			this.setState({
-				loading: false
-			});
-			//this.joinRoom();
-			// found
-			Alert.alert(
-				'No games found',
-				'We did not found games running on this LAN ¿Would you like to start a game?',
-				[
-					{ text: 'No', onPress: () => console.log('no pressed'), style: 'cancel' },
-					{ text: 'Yes', onPress: () => this._startServer('Default') }
-				]
-			);
-		}, 500);
-	}
-
-	_startServer(name) {
-		name = name || this.props.server.name;
-		if (!name) {
-			this.props.newMessage(
-				Payloads.Flag(`Please enter a name for your game and hit SEND`));
-			this.setState({
-				isExpectingServerName: true
-			});
-		} else {
-			NativeModules.ServerHandler.start(name).then((result) => {
-				this.props.server_setName(name);
-				this.props.server_setHost(`ws://localhost:${result}`);
-				this.setState({
-					isExpectingServerName: false
-				});
-				this.joinRoom();
-			}).catch((e) => {
-				console.log(e);
-			});
-		}
+		this._showHub();
+		// setTimeout(() => {
+		// 	this.setState({
+		// 		loading: false
+		// 	});
+		// 	//this.joinRoom();
+		// 	// found
+		// 	Alert.alert(
+		// 		'No games found',
+		// 		'We did not found games running on this LAN ¿Would you like to start a game?',
+		// 		[
+		// 			{ text: 'No', onPress: () => console.log('no pressed'), style: 'cancel' },
+		// 			{ text: 'Yes', onPress: () => this._startServer() }
+		// 		]
+		// 	);
+		// }, 2000);
 	}
 
 	/**
+	 * Handles BottomBar submit event
 	 * 
-	 * @param {String} value contents of TextInput
-	 */
-	_handleInputChange(value) {
-		//this.props.changeInput(value);
-	}
-
-	/**
-	 * Handle button touch event
+	 * @param {string} inputValue the value of the input field
 	 */
 	_handleSubmit(inputValue) {
 		if (inputValue !== '') {
@@ -142,12 +97,17 @@ class App extends Component {
 						});
 						break;
 					case 'connect':
-						this.props.server_setHost(`ws://${inputValue[1]}:63111`);
+						this.props.server_setHost(`ws://${inputValue[1]}`);
 						this.joinRoom();
 						break;
 					case 'scan':
-						console.log(NativeModules.ServerHandler.PROTOCOL);
 						this.zeroconf.scan(NativeModules.ServerHandler.PROTOCOL);
+						break;
+					case 'hub':
+						if (this.state.hubVisible)
+							this._hideHub();
+						else
+							this._showHub();
 						break;
 					default:
 						Payloads.Flag(`Unknown command: '${inputValue[0]}'`);
@@ -173,21 +133,23 @@ class App extends Component {
 	/**
 	 * Pressed!
 	 * 
-	 * @param {Message} item 
+	 * @param {Message} message
 	 */
-	_handleItemPress(item, name) {
-		if (!name) {
-			this._showModal(<ModalPickUser
-				ip={item.props.secret}
-				names={this.props.server.players}
-				onItemSelected={(ip, name) => this._handleItemPress(ip, name)}
-				onClose={() => this._hideModal()}
-			/>);
-		} else {
-			if (this.room)
-				this.room.guess(item, name);
-			this._hideModal();
+	_handleItemPress(message) {
+		this.setState({
+			ipToGuess: message.props.secret
+		});
+		this._showGuess();
+	}
+
+	_handleNameSelected(name) {
+		if (this.room && this.state.ipToGuess) {
+			this.room.guess(this.state.ipToGuess, name);
+			this.setState({
+				ipToGuess: null
+			});
 		}
+		this._hideGuess();
 	}
 
 	joinRoom() {
@@ -195,10 +157,12 @@ class App extends Component {
 			if (this.props.server.host) {
 				if (this.room)
 					this.room.invalidate();
-				this.room = new RoomWS(this.props.server.host, this.props.user.name, this.props.newMessage);
+				this.props.server_setWaiting(false);
+				this.room = new RoomWS(
+					`ws://${this.props.server.host}:${this.props.server.port}`,
+					this.props.user.name,
+					this.props.newMessage);
 			} else {
-				this.props.newMessage(
-					Payloads.Flag('No host. Searching...'));
 				this._searchServer();
 			}
 		} else {
@@ -207,18 +171,28 @@ class App extends Component {
 		}
 	}
 
-	_showModal(content) {
+	_showGuess() {
 		this.setState({
-			modalVisible: true,
-			modalContent: content
+			guessVisible: true
 		});
 	}
 
-	_hideModal() {
+	_hideGuess() {
 		this.setState({
-			modalVisible: false,
-			modalContent: null
+			guessVisible: false
 		});
+	}
+
+	_showHub() {
+		this.setState({
+			hubVisible: true
+		});
+	}
+	_hideHub() {
+		this.setState({
+			hubVisible: false
+		});
+
 	}
 
 
@@ -246,15 +220,33 @@ class App extends Component {
 					}}
 				/>
 				<BottomBar
-					onChangeInput={(value) => this._handleInputChange(value)}
 					onSubmit={(value) => this._handleSubmit(value)} />
-				<Modal
-					animationType="slide"
-					transparent={true}
-					onRequestClose={() => this._hideModal()}
-					visible={this.state.modalVisible} >
-					{this.state.modalContent}
-				</Modal>
+				{this.state.hubVisible &&
+					<GamesHub
+						onClose={() => this._hideHub()}
+					/>}
+				{this.state.guessVisible &&
+					<ModalSelect
+						visible
+						title='Have you guessed the sender?'
+						items={this.props.game.players.map((player, index) => {
+							return {
+								key: index.toString(),
+								value: player.name
+							};
+						})}
+						onItemSelected={(item) => this._handleNameSelected(item.value)}
+						onClose={() => this._hideGuess()} />}
+				{this.props.game.kickedOut &&
+					<GameOver visible />}
+				{this.props.game.won &&
+					<GameOver 
+					visible
+					title="You Won!"
+					caption={this.props.game.kickedOut ? "And in the last second!" : "You feel confident and full of life."}
+					onClose={() => {
+						this.props.game__restart();
+					}} />}
 				{this.state.loading && <ActivityIndicator
 					ref='loader_main'
 					size="large"
@@ -283,9 +275,11 @@ function mapDispatchToProps(dispatch) {
  */
 function mapStateToProps(state) {
 	return {
+		game: state.game,
 		server: state.server,
 		user: state.user,
-		messages: state.messages
+		messages: state.messages,
+		games: state.games
 	};
 }
 

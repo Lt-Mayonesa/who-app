@@ -7,12 +7,14 @@ import com.who.server.utils.EncryptionUtil;
  * on 4/18/18.
  */
 public class Client {
+    private boolean active;
     private String ip;
     private String name;
     private String nickName;
 
-    public Client(String ipAdress) {
-        this.ip = ipAdress;
+    public Client(String ipAddress) {
+        this.active = true;
+        this.ip = ipAddress;
     }
 
     public String getSecret() {
@@ -41,5 +43,13 @@ public class Client {
 
     public void setNickName(String nickName) {
         this.nickName = nickName;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }
