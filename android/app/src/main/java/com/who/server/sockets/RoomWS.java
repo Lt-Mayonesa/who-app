@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 import java.io.IOException;
 
 import com.who.server.RoomServer;
+import com.who.server.payloads.Event;
 import com.who.server.payloads.Guess;
 import com.who.server.payloads.Message;
 import com.who.server.payloads.Name;
@@ -52,36 +53,51 @@ public class RoomWS extends NanoWSD.WebSocket {
         frame.setUnmasked();
         Gson gson = new Gson();
         Packet packet = gson.fromJson(frame.getTextPayload(), Packet.class);
-        if (packet.isJoin()) {
-            Name name = gson.fromJson(packet.getPayload(), Name.class);
-            this.mClient.setName(name.getValue());
-            name.prepare(this.mClient);
-            // send confirmation of JOIN received
-            Packet confirmation = new Packet(Packet.Actions.RECEIVED_NAME);
-            confirmation.setPayload(gson.toJsonTree(name));
-            try {
-                send(confirmation);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            // broadcast new player
-            name.setPlayers(this.server.getPlayers());
-            packet.setPayload(gson.toJsonTree(name));
-        } else if (packet.isGuess()) {
-            //we do something
-            Guess guess = gson.fromJson(packet.getPayload(), Guess.class);
-            int guessed = this.server.guessedCorrectly(guess);
-            if (guessed < 2) {
-                guess.setCorrect(guessed == 1);
-                guess.prepare(this.server, this.mClient);
-                packet.setPayload(gson.toJsonTree(guess));
-            } else
-                respond = false;
+        switch (packet.getAction()) {
 
-        } else {
-            Message m = gson.fromJson(packet.getPayload(), Message.class);
-            m.prepare(this.mClient);
-            packet.setPayload(gson.toJsonTree(m));
+            case Packet.Actions.START:
+
+                Event event = new Event("START");
+                event.prepare(this.mClient);
+                packet.setPayload(gson.toJsonTree(event));
+                break;
+
+            case Packet.Actions.JOIN:
+
+                Name name = gson.fromJson(packet.getPayload(), Name.class);
+                this.mClient.setName(name.getValue());
+                name.prepare(this.mClient);
+                // send confirmation of JOIN received
+                Packet confirmation = new Packet(Packet.Actions.RECEIVED_NAME);
+                confirmation.setPayload(gson.toJsonTree(name));
+                try {
+                    send(confirmation);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                // broadcast new player
+                name.setPlayers(this.server.getPlayers());
+                packet.setPayload(gson.toJsonTree(name));
+                break;
+
+            case Packet.Actions.GUESS:
+
+                Guess guess = gson.fromJson(packet.getPayload(), Guess.class);
+                int guessed = this.server.guessedCorrectly(guess);
+                if (guessed < 2) {
+                    guess.setCorrect(guessed == 1);
+                    guess.prepare(this.server, this.mClient);
+                    packet.setPayload(gson.toJsonTree(guess));
+                } else
+                    respond = false;
+                break;
+
+            case Packet.Actions.MESSAGE:
+
+                Message m = gson.fromJson(packet.getPayload(), Message.class);
+                m.prepare(this.mClient);
+                packet.setPayload(gson.toJsonTree(m));
+                break;
         }
         if (respond) {
             try {

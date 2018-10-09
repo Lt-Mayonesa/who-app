@@ -24,7 +24,19 @@ import fi.iki.elonen.NanoWSD;
 public class RoomServer extends NanoWSD {
     private final String TAG = this.getClass().getCanonicalName();
 
-    private CountDownTimer timer;
+    private Thread thread;
+    private Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!Thread.interrupted())
+                new PingSocketsTask().execute();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    };
     private ArrayList<RoomWS> sockets = new ArrayList<>();
 
     public RoomServer(int port) {
@@ -34,23 +46,16 @@ public class RoomServer extends NanoWSD {
     @Override
     public void start() throws IOException {
         super.start();
-        timer = new CountDownTimer(10 * 60 * 1000, 1000) {
 
-            public void onTick(long millisUntilFinished) {
-                new PingSocketsTask().execute();
-            }
-
-            public void onFinish() {
-                stop();
-            }
-        }.start();
+        thread = new Thread(runnable);
+        thread.start();
     }
 
     @Override
     public void stop() {
         super.stop();
-        if (timer != null)
-            timer.cancel();
+        if (thread != null)
+            thread.interrupt();
         try {
             closeAll();
         } catch (IOException e) {

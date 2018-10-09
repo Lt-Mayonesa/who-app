@@ -4,6 +4,7 @@ import * as actions from '../payloads/actions';
 export default class ChatWebSocket extends WebSocket {
     messageHandler = null;
     name = 'Anonymous';
+
     /**
      * 
      * 
@@ -21,10 +22,22 @@ export default class ChatWebSocket extends WebSocket {
         this.onclose = this.__onclose;
     }
 
+    /**
+     * Use Websocket.send() to send a json as a string
+     * 
+     * @param {Object} obj POJO to send
+     */
     sendJSON(obj) {
         this.send(JSON.stringify(obj));
     }
 
+    /**
+     * Try to guess a user against the server
+     * 
+     * 
+     * @param {string} ip 
+     * @param {string} name 
+     */
     guess(ip, name) {
         this.sendJSON({
             action: actions.GUESS,
@@ -35,6 +48,11 @@ export default class ChatWebSocket extends WebSocket {
         });
     }
 
+    /**
+     * Broadcast a message to all players
+     * 
+     * @param {string} text the text to send
+     */
     message(text) {
         this.sendJSON({
             action: actions.MESSAGE,
@@ -44,12 +62,28 @@ export default class ChatWebSocket extends WebSocket {
         });
     }
 
+    /**
+     * Tell the server this client is joining the game
+     * and asign it this name
+     * 
+     * @param {string} name name of the client
+     */
     join(name) {
         this.sendJSON({
             action: actions.JOIN,
             payload: {
                 value: name
             }
+        });
+    }
+
+    /**
+     * Tell the server the game has started
+     * the server then broadcasts a 'start' to all players
+     */
+    start() {
+        this.sendJSON({
+            action: actions.START
         });
     }
 

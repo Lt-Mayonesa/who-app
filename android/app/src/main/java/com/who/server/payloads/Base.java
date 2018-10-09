@@ -51,5 +51,6 @@ public abstract class Base {
     public static class Types {
         public static final String MESSAGE = "MESSAGE";
         public static final String FLAG = "FLAG";
+        public static final String EVENT = "EVENT";
     }
 }
