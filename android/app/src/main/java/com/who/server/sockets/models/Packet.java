@@ -9,6 +9,8 @@ import com.google.gson.JsonElement;
 public class Packet {
 
     public static class Actions {
+        public static final String START = "start";
+        public static final String END = "end";
         public static final String JOIN = "join";
         public static final String RECEIVED_NAME = "received_name";
         public static final String MESSAGE = "message";
